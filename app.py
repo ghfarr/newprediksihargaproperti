@@ -2,24 +2,28 @@ import streamlit as st
 import pickle
 import numpy as np
 
-# Load model dan encoder
-with open("model.pkl", "rb") as f:
+with open('model.pkl', 'rb') as f:
     model = pickle.load(f)
 
-with open("label_encoders.pkl", "rb") as f:
+with open('label_encoders.pkl', 'rb') as f:
     label_encoders = pickle.load(f)
 
 st.set_page_config(page_title="Prediksi Harga Properti", layout="centered")
-st.title("🏡 Prediksi Harga Properti")
-st.write("Masukkan informasi properti Anda:")
+st.title("🏠 Prediksi Harga Properti")
 
-# Input fitur sesuai model (5 fitur)
-grlivarea = st.number_input("Luas Bangunan (GrLivArea)", min_value=1)
-lotarea = st.number_input("Luas Tanah (LotArea)", min_value=1)
-overallqual = st.selectbox("Kualitas Bangunan", {"Buruk": 3, "Sedang": 5, "Bagus": 8}.values())
-garage_area = st.number_input("Ukuran Garasi (GarageArea)", min_value=0)
+# Input 7 fitur
+grlivarea = st.number_input("Luas Bangunan (m²)", min_value=1)
+lotarea = st.number_input("Luas Tanah (m²)", min_value=1)
+bedroom = st.number_input("Jumlah Kamar Tidur", min_value=0)
+bathroom = st.number_input("Jumlah Kamar Mandi", min_value=0)
+garage_area = st.number_input("Ukuran Garasi (m²)", min_value=0)
 
-# Lokasi (provinsi)
+# Kualitas bangunan
+kualitas_opsi = {"Buruk": 3, "Sedang": 5, "Bagus": 8}
+kualitas_input = st.selectbox("Kualitas Bangunan", list(kualitas_opsi.keys()))
+overallqual = kualitas_opsi[kualitas_input]
+
+# Provinsi Indonesia
 provinsi_list = sorted([
     'Aceh', 'Bali', 'Banten', 'Bengkulu', 'DI Yogyakarta', 'DKI Jakarta',
     'Gorontalo', 'Jambi', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur',
@@ -30,15 +34,15 @@ provinsi_list = sorted([
     'Sulawesi Tengah', 'Sulawesi Tenggara', 'Sulawesi Utara', 'Sumatera Barat',
     'Sumatera Selatan', 'Sumatera Utara'
 ])
-provinsi = st.selectbox("Lokasi Properti (Provinsi)", provinsi_list)
+lokasi_input = st.selectbox("Lokasi Properti (Provinsi)", provinsi_list)
 
-# Prediksi harga
+# Prediksi
 if st.button("🔍 Prediksi Harga"):
     try:
-        encoded_provinsi = label_encoders["Neighborhood"].transform([provinsi])[0]
-        features = np.array([[grlivarea, lotarea, overallqual, garage_area, encoded_provinsi]])
+        lokasi_encoded = label_encoders["Neighborhood"].transform([lokasi_input])[0]
+        features = np.array([[grlivarea, lotarea, bedroom, bathroom, overallqual, garage_area, lokasi_encoded]])
         log_pred = model.predict(features)[0]
         harga = np.expm1(log_pred)
         st.success(f"💰 Estimasi Harga Properti: Rp {harga:,.0f}")
     except Exception as e:
-        st.error(f"❌ Error: {e}")
+        st.error(f"❌ Terjadi kesalahan saat prediksi: {e}")
