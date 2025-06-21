@@ -48,8 +48,7 @@ if st.button("🔍 Prediksi Harga"):
         kualitas_input,
         lokasi_encoded
     ]])
+prediksi = model.predict(input_data)[0]
+formatted_price = f"Rp {prediksi:,.0f}".replace(",", ".")
+st.success(f"💰 Estimasi Harga Properti: {formatted_price}")
 
-    prediksi = model.predict(input_data)[0]
-    prediksi = np.expm1(prediksi)  # inverse log1p
-    formatted_price = f"Rp {prediksi:,.0f}".replace(",", ".")
-    st.success(f"💰 Estimasi Harga Properti: {formatted_price}")
